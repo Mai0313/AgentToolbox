@@ -1,0 +1,6 @@
+#### Development Related ####
+ipykernel
+ipywidgets
+pre-commit
+pytest
+sh
