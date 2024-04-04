@@ -1,4 +1,21 @@
+# Captcha Resolver
+ddddocr
+
+# Data
+orjson
+pydantic
+phonenumbers
+pydantic-extra-types
+
+# Visualisation
+rich
+
+# Web Scraping
+requests
+playwright
+
 #### Development Related ####
+autorootcwd
 ipykernel
 ipywidgets
 pre-commit
