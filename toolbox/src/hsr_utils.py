@@ -30,6 +30,7 @@ class HSRUtils(BaseModel):
         captcha_element = page.wait_for_selector(captcha_selector)
         captcha_element = captcha_element.get_attribute("src")
         captcha_url = urljoin(base_url, captcha_element)
+        console.log(f"Captcha URL: {captcha_url}")
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36"
         }
