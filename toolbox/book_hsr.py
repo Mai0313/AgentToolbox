@@ -4,8 +4,8 @@ import datetime
 
 import autorootcwd
 from rich.console import Console
-from playwright.sync_api import sync_playwright
-from toolbox.src.hsr_utils import HSRUtils
+from playwright.sync_api import TimeoutError, sync_playwright
+from toolbox.src.hsr_core import HSRUtils
 from toolbox.models.payment_models import PaymentModel
 from playwright.sync_api._generated import Page
 
@@ -40,7 +40,7 @@ class HSR(PaymentModel):
         page.select_option('select[name="ddlExpMonth"]', self.card_expire_date[0:2])
         page.select_option('select[name="ddlExpYear"]', self.card_expire_date[2:4])
         # 點擊立即付款按鈕
-        page.click("a#btnPressToPay")
+        page.click("a#btnPressToPay", timeout=1)
         # 等待付款完成或其他後續操作 (目前不知道畫面長啥樣 以後再看)
         page.wait_for_load_state("networkidle")
 
@@ -49,19 +49,6 @@ class HSR(PaymentModel):
         os.makedirs("logs", exist_ok=True)
         screenshot_path = f"./logs/screenshot_{now}.png"
         page.screenshot(path=screenshot_path, full_page=True)
-
-    def skip_cookie(self, page: Page) -> None:
-        accept_button = page.query_selector("button.policy-btn-accept#cookieAccpetBtn")
-        if accept_button:
-            accept_button.click()
-
-    def skip_alert(self, page: Page) -> None:
-        close_button = page.query_selector(
-            'input.uk-modal-close.uk-button.uk-button-primary.btn-confirm[value="關閉"]'
-        )
-        if close_button:
-            close_button.click()
-            console.log("Warning: The ticket is running out of stock.")
 
     def main(self):
         hsr_utils = HSRUtils()
@@ -77,7 +64,7 @@ class HSR(PaymentModel):
                 accept_downloads=False,
                 has_touch=False,
                 is_mobile=False,
-                locale="en-US",
+                locale="zh-TW",
                 permissions=[],
                 geolocation=None,
                 color_scheme="light",
@@ -100,16 +87,17 @@ class HSR(PaymentModel):
                 f'select[name="ticketPanel:rows:{ticket_type.get(self.ticket_type)}:ticketAmount"]',
                 f"{self.ticket_numbers}",
             )  # 票種
-            base64_captcha = HSRUtils.get_captcha_image(page=page, base_url=base_url)
-            captcha_code = HSRUtils.resolve_captcha(base64_captcha=base64_captcha)
+            base64_captcha = hsr_utils.get_captcha_image(page=page, base_url=base_url)
+            captcha_code = hsr_utils.resolve_captcha(base64_captcha=base64_captcha)
             page.fill('input[name="homeCaptcha:securityCode"]', captcha_code)
+            hsr_utils.screenshot(page=page)
             page.click('input[name="SubmitButton"][value="開始查詢"]')
 
             # Page 2
             page.wait_for_load_state("networkidle")  # 等待網頁載入
-            self.skip_cookie(page=page)  # 跳過詢問cookie
+            hsr_utils.skip_cookie(page=page)  # 跳過詢問cookie
             page.click('input[value="確認車次"]')  # 點擊確認車次按鈕
-            self.screenshot(page=page)
+            hsr_utils.screenshot(page=page)
 
             # Page 3
             page.wait_for_load_state("networkidle")  # 等待網頁載入
@@ -118,25 +106,22 @@ class HSR(PaymentModel):
             page.fill('input[name="email"]', self.email_address)  # 填寫電子郵件
             page.click('input[name="agree"]')  # 勾選同意條款
             page.click('input[id="isSubmit"]')  # 點擊完成訂位按鈕
-            self.screenshot(page=page)
+            hsr_utils.screenshot(page=page)
 
             # Page 4
             page.wait_for_load_state("networkidle")
             pnr_code_element = page.query_selector("p.pnr-code > span")  # 獲取訂位號碼代碼
             pnr_code = pnr_code_element.inner_text() if pnr_code_element else None
             console.log(f"訂位編號: {pnr_code}")
-            self.skip_alert(page=page)
-            self.screenshot(page=page)
+            hsr_utils.skip_alert(page=page)
+            hsr_utils.screenshot(page=page)
 
             # if self.card_number and self.card_expire_date:
             #     self.fill_payment(page=page)
-            browser.close()
             return pnr_code
 
 
 if __name__ == "__main__":
-    # Need 身分證 電話 email
-    # Additional TGo 帳號 (直接用身分證)
     personal_id = "A123456789"
     phone_number = "0977123456"
     email_address = "test@gmail.com"

@@ -1,4 +1,6 @@
+import os
 import base64
+import datetime
 from urllib.parse import urljoin
 
 import orjson
@@ -56,6 +58,33 @@ class HSRUtils(BaseModel):
     @property
     def ticket_type(self) -> dict[str, int]:
         return self.hsr_config.ticket_type
+
+    @classmethod
+    def skip_cookie(cls, page: Page) -> None:
+        try:
+            accept_button = page.query_selector("button.policy-btn-accept#cookieAccpetBtn")
+            if accept_button:
+                accept_button.click(timeout=1)
+        except Exception:
+            pass
+
+    @classmethod
+    def skip_alert(cls, page: Page) -> None:
+        try:
+            close_button = page.query_selector(
+                'input.uk-modal-close.uk-button.uk-button-primary.btn-confirm[value="關閉"]'
+            )
+            if close_button:
+                close_button.click(timeout=1)
+        except Exception:
+            pass
+
+    @classmethod
+    def screenshot(cls, page: Page) -> None:
+        now = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        os.makedirs("logs", exist_ok=True)
+        screenshot_path = f"./logs/screenshot_{now}.png"
+        page.screenshot(path=screenshot_path, full_page=True)
 
 
 if __name__ == "__main__":
