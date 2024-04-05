@@ -64,6 +64,10 @@ class HSR(PaymentModel):
             console.log("Warning: The ticket is running out of stock.")
 
     def main(self):
+        hsr_utils = HSRUtils()
+        location_id = hsr_utils.location_id
+        ticket_type = hsr_utils.ticket_type
+
         with sync_playwright() as p:
             base_url = "https://irs.thsrc.com.tw"
             browser = p.chromium.launch(headless=True)
@@ -83,9 +87,7 @@ class HSR(PaymentModel):
             page.goto(f"{base_url}/IMINT")
 
             # Page 1
-            hsr_utils = HSRUtils()
-            location_id = hsr_utils.location_id
-            ticket_type = hsr_utils.ticket_type
+            page.wait_for_load_state("networkidle")  # 等待網頁載入
             page.select_option(
                 'select[name="selectStartStation"]', f"{location_id.get(self.location_from)}"
             )  # 出發地
