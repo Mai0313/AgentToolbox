@@ -44,10 +44,12 @@ class HSR(PaymentModel):
         # 等待付款完成或其他後續操作 (目前不知道畫面長啥樣 以後再看)
         page.wait_for_load_state("networkidle")
 
-    def screenshot(self, page: Page) -> None:
+    def screenshot(cls, page: Page) -> None:
         now = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-        os.makedirs("logs", exist_ok=True)
-        screenshot_path = f"./logs/screenshot_{now}.png"
+        log_path = f"./logs/log_{now}"
+        os.makedirs(log_path, exist_ok=True)
+        existed_log = len(os.listdir(log_path)) + 1
+        screenshot_path = f"{log_path}/screenshot_step{existed_log}.png"
         page.screenshot(path=screenshot_path, full_page=True)
 
     def main(self):
@@ -90,14 +92,14 @@ class HSR(PaymentModel):
             base64_captcha = hsr_utils.get_captcha_image(page=page, base_url=base_url)
             captcha_code = hsr_utils.resolve_captcha(base64_captcha=base64_captcha)
             page.fill('input[name="homeCaptcha:securityCode"]', captcha_code)
-            hsr_utils.screenshot(page=page)
-            page.click('input[name="SubmitButton"][value="開始查詢"]')
+            self.screenshot(page=page)
+            page.click('input[name="SubmitButton"][value="開始查詢"]', timeout=1)
 
             # Page 2
             page.wait_for_load_state("networkidle")  # 等待網頁載入
-            hsr_utils.skip_cookie(page=page)  # 跳過詢問cookie
+            # hsr_utils.skip_cookie(page=page)  # 跳過詢問cookie
             page.click('input[value="確認車次"]')  # 點擊確認車次按鈕
-            hsr_utils.screenshot(page=page)
+            self.screenshot(page=page)
 
             # Page 3
             page.wait_for_load_state("networkidle")  # 等待網頁載入
@@ -106,15 +108,15 @@ class HSR(PaymentModel):
             page.fill('input[name="email"]', self.email_address)  # 填寫電子郵件
             page.click('input[name="agree"]')  # 勾選同意條款
             page.click('input[id="isSubmit"]')  # 點擊完成訂位按鈕
-            hsr_utils.screenshot(page=page)
+            self.screenshot(page=page)
 
             # Page 4
             page.wait_for_load_state("networkidle")
             pnr_code_element = page.query_selector("p.pnr-code > span")  # 獲取訂位號碼代碼
             pnr_code = pnr_code_element.inner_text() if pnr_code_element else None
             console.log(f"訂位編號: {pnr_code}")
-            hsr_utils.skip_alert(page=page)
-            hsr_utils.screenshot(page=page)
+            # hsr_utils.skip_alert(page=page)
+            self.screenshot(page=page)
 
             # if self.card_number and self.card_expire_date:
             #     self.fill_payment(page=page)

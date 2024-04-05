@@ -79,13 +79,6 @@ class HSRUtils(BaseModel):
         except Exception:
             pass
 
-    @classmethod
-    def screenshot(cls, page: Page) -> None:
-        now = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-        os.makedirs("logs", exist_ok=True)
-        screenshot_path = f"./logs/screenshot_{now}.png"
-        page.screenshot(path=screenshot_path, full_page=True)
-
 
 if __name__ == "__main__":
     hsr_utils = HSRUtils()
