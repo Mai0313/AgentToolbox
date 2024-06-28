@@ -4,7 +4,7 @@ default_language_version:
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit.git
     # Ruff version.
-    rev: v0.3.5
+    rev: v0.5.0
     hooks:
       - id: ruff
         args:
@@ -14,7 +14,7 @@ repos:
           - --config=pyproject.toml
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v4.6.0
     hooks:
       # list of supported hooks: https://pre-commit.com/hooks.html
       - id: check-added-large-files
